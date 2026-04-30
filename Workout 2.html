@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Composite">
+<meta name="theme-color" content="#0f0f0d">
+<title>Composite Athlete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0d;
+  --surface: #1a1a16;
+  --surface2: #222220;
+  --surface3: #2a2a26;
+  --border: #2e2e2a;
+  --border-strong: #3a3a36;
+  --text: #e8e6df;
+  --text-soft: #a8a69e;
+  --muted: #6e6c64;
+  --subtle: #4a4844;
+  --amber: #d4a84b;
+  --amber-dim: #8a6f30;
+  --green: #7eb87a;
+  --blue: #6ba3d6;
+  --red: #c47070;
+  --purple: #a87bc4;
+  --teal: #6bbfb8;
+  --cream: #d4c9a8;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  height: 100%; overflow: hidden;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px; line-height: 1.5;
+  overscroll-behavior: none;
+}
+body { touch-action: pan-y; }
+
+/* APP CONTAINER */
+.app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+
+/* SCREEN STACK */
+.screens { flex: 1; position: relative; overflow: hidden; }
+.screen {
+  position: absolute; inset: 0;
+  background: var(--bg);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: var(--safe-top);
+  padding-bottom: calc(76px + var(--safe-bottom));
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+.screen.active { transform: translateX(0); z-index: 2; }
+.screen.previous { transform: translateX(-30%); z-index: 1; }
+.screen.entering { transform: translateX(100%); }
+
+/* HEADER */
+.header {
+  position: sticky; top: 0;
+  background: rgba(15, 15, 13, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px 14px;
+  z-index: 10;
+  display: flex; align-items: center; gap: 12px;
+}
+.header-back {
+  width: 32px; height: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.header-back:active { background: var(--surface2); }
+.header-title-wrap { flex: 1; min-width: 0; }
+.header-title {
+  font-size: 17px; font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.header-subtitle {
+  font-size: 11px; color: var(--muted);
+  margin-top: 1px;
+}
+.header-action {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--amber);
+  font-size: 14px; font-weight: 600;
+}
+
+/* HERO HEADER (HOME) */
+.hero {
+  padding: 28px 20px 16px;
+}
+.hero-eyebrow {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--amber); font-weight: 600; margin-bottom: 8px;
+}
+.hero-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 36px; line-height: 1.05;
+  color: var(--text);
+}
+.hero-title em { font-style: italic; color: var(--cream); }
+.hero-meta {
+  font-size: 13px; color: var(--muted);
+  margin-top: 10px; line-height: 1.6;
+}
+
+/* SECTIONS */
+.section-title {
+  font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+  font-weight: 600; margin: 24px 20px 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* CARDS */
+.card-list { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 14px;
+}
+.card:active { transform: scale(0.98); background: var(--surface2); }
+.card-num {
+  width: 36px; height: 36px;
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px; color: var(--amber);
+  flex-shrink: 0;
+}
+.card-num.deload { color: var(--amber-dim); }
+.card-num.benchmark { color: var(--purple); }
+.card-num.peak { color: var(--green); }
+.card-num.completed { background: var(--amber); color: var(--bg); border-color: var(--amber); }
+.card-body { flex: 1; min-width: 0; }
+.card-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--text); line-height: 1.3;
+  margin-bottom: 2px;
+}
+.card-subtitle {
+  font-size: 11px; color: var(--muted);
+  display: flex; align-items: center; gap: 6px;
+}
+.card-arrow {
+  color: var(--muted); font-size: 16px; flex-shrink: 0;
+}
+.card-pill {
+  font-size: 9px; font-weight: 600;
+  padding: 2px 7px; border-radius: 99px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.pill-deload { background: rgba(212, 168, 75, 0.15); color: var(--amber); }
+.pill-bench { background: rgba(168, 123, 196, 0.15); color: var(--purple); }
+.pill-peak { background: rgba(126, 184, 122, 0.15); color: var(--green); }
+.pill-done { background: rgba(126, 184, 122, 0.15); color: var(--green); }
+
+/* DAY GRID */
+.days-grid {
+  padding: 8px 16px 0;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.day-cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.day-cell:active { background: var(--surface2); }
+.day-cell.completed { background: rgba(126, 184, 122, 0.08); border-color: rgba(126, 184, 122, 0.3); }
+.day-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px; color: var(--amber);
+  line-height: 1;
+}
+.day-cell.completed .day-num { color: var(--green); }
+.day-label {
+  font-size: 9px; color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* INFO BOX */
+.info-box {
+  margin: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+.info-box strong { color: var(--amber); display: block; margin-bottom: 3px; font-size: 12px; }
+.info-box.green { border-left-color: var(--green); }
+.info-box.green strong { color: var(--green); }
+.info-box.blue { border-left-color: var(--blue); }
+.info-box.blue strong { color: var(--blue); }
+.info-box.purple { border-left-color: var(--purple); }
+.info-box.purple strong { color: var(--purple); }
+
+/* DAY SCREEN */
+.day-hero {
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.day-hero-eyebrow {
+  font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--amber);
+  font-weight: 600; margin-bottom: 6px;
+}
+.day-hero-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px; color: var(--text);
+  line-height: 1.1;
+}
+.day-hero-meta {
+  font-size: 12px; color: var(--muted);
+  margin-top: 8px;
+  display: flex; gap: 12px; align-items: center;
+}
+.cns-badge {
+  font-size: 9px; font-weight: 700;
+  padding: 3px 9px; border-radius: 99px;
+  letter-spacing: 0.06em;
+}
+.cns-HIGH { background: rgba(196, 112, 112, 0.15); color: var(--red); }
+.cns-LOW { background: rgba(126, 184, 122, 0.15); color: var(--green); }
+.cns-REST { background: var(--surface3); color: var(--muted); }
+
+/* WARMUP BOX */
+.warmup-card {
+  margin: 14px 16px;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--cream);
+}
+.warmup-label {
+  font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted);
+  font-weight: 600; margin-bottom: 4px;
+}
+.warmup-text {
+  font-size: 12px; color: var(--text-soft);
+  line-height: 1.6;
+}
+
+/* EXERCISE CARD */
+.exercise {
+  margin: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.exercise-header {
+  padding: 14px 16px 10px;
+  cursor: pointer;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.exercise-header:active { background: var(--surface2); }
+.exercise-icon {
+  width: 28px; height: 28px;
+  background: var(--surface2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--amber);
+  flex-shrink: 0; margin-top: 1px;
+  font-weight: 600;
+}
+.exercise-info { flex: 1; min-width: 0; }
+.exercise-name {
+  font-size: 14px; font-weight: 600;
+  color: var(--text); line-height: 1.3;
+  margin-bottom: 4px;
+}
+.exercise-meta {
+  font-size: 11px; color: var(--muted);
+  display: flex; flex-wrap: wrap; gap: 8px;
+  line-height: 1.5;
+}
+.meta-pill {
+  background: var(--surface2);
+  padding: 1px 7px; border-radius: 4px;
+  font-size: 10px;
+  border: 1px solid var(--border);
+}
+.meta-pill strong { color: var(--text-soft); font-weight: 600; }
+.exercise-toggle {
+  color: var(--muted); font-size: 14px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.exercise.open .exercise-toggle { transform: rotate(180deg); }
+
+.exercise-body {
+  display: none;
+  padding: 0 16px 14px;
+  border-top: 1px solid var(--border);
+}
+.exercise.open .exercise-body { display: block; }
+.exercise-note {
+  font-size: 12px; color: var(--text-soft);
+  line-height: 1.6; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* SET ROW */
+.sets-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.set-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 1fr 60px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.set-row.logged { background: rgba(126, 184, 122, 0.06); border-color: rgba(126, 184, 122, 0.25); }
+.set-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 14px; color: var(--amber);
+  text-align: center;
+}
+.set-row.logged .set-num { color: var(--green); }
+.set-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 10px;
+  width: 100%;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 36px;
+}
+.set-input:focus {
+  outline: none;
+  border-color: var(--amber);
+  background: var(--surface3);
+}
+.set-input::placeholder { color: var(--muted); }
+.rpe-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%236e6c64' d='M4 6L0 0h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 6px;
+  padding-right: 18px;
+  text-align: center;
+  min-height: 36px;
+}
+.set-headers {
+  display: grid;
+  grid-template-columns: 24px 1fr 1fr 60px;
+  gap: 8px;
+  padding: 0 10px;
+  margin-bottom: 4px;
+}
+.set-header-label {
+  font-size: 9px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted);
+  font-weight: 600;
+}
+.set-header-label:first-child { text-align: center; }
+.set-header-label:nth-child(2),
+.set-header-label:nth-child(3),
+.set-header-label:nth-child(4) { text-align: center; }
+
+/* FINISHER */
+.finisher {
+  margin: 8px 16px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.finisher-label {
+  font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--teal);
+  font-weight: 600; margin-bottom: 4px;
+}
+.finisher-name {
+  font-size: 13px; font-weight: 600;
+  color: var(--text); margin-bottom: 2px;
+}
+.finisher-detail {
+  font-size: 12px; color: var(--text-soft);
+  line-height: 1.5;
+}
+.zone-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600;
+  padding: 2px 7px; border-radius: 99px;
+  background: rgba(74, 144, 217, 0.15);
+  color: var(--blue);
+  margin-top: 6px;
+}
+
+/* PROGRESS / HISTORY */
+.stat-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; padding: 8px 16px 0;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+}
+.stat-val {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px; color: var(--amber);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 0.06em; margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* EXERCISE HISTORY */
+.history-item {
+  margin: 0 16px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.history-name { font-size: 13px; font-weight: 600; }
+.history-blocks { font-size: 11px; color: var(--muted); }
+.history-bar-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 50px;
+  gap: 8px; align-items: center;
+  padding: 4px 0;
+  font-size: 11px;
+}
+.history-block-num { color: var(--muted); }
+.history-bar {
+  height: 6px; background: var(--surface3);
+  border-radius: 99px; overflow: hidden;
+}
+.history-bar-fill {
+  height: 100%; background: var(--amber);
+  border-radius: 99px;
+}
+.history-val { text-align: right; color: var(--text-soft); font-weight: 500; }
+
+/* BOTTOM NAV */
+.tabbar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(15, 15, 13, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 8px 0 calc(6px + var(--safe-bottom));
+  z-index: 100;
+}
+.tab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 6px 4px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.15s;
+  gap: 3px;
+}
+.tab.active { color: var(--amber); }
+.tab-icon {
+  font-size: 18px; line-height: 1;
+  font-weight: 500;
+}
+.tab-label {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* EXPORT */
+.export-textarea {
+  width: calc(100% - 32px);
+  margin: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 14px;
+  min-height: 200px;
+  resize: vertical;
+}
+.button {
+  margin: 8px 16px;
+  background: var(--amber);
+  color: var(--bg);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  width: calc(100% - 32px);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.button:active { opacity: 0.8; }
+.button.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+/* SAVE INDICATOR */
+.save-toast {
+  position: fixed;
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--surface);
+  border: 1px solid var(--green);
+  color: var(--green);
+  padding: 10px 18px;
+  border-radius: 99px;
+  font-size: 12px; font-weight: 600;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.save-toast.show { transform: translateX(-50%) translateY(0); }
+
+/* PROGRESS BAR */
+.progress-block {
+  margin: 14px 16px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.progress-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.progress-label { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+.progress-val { font-size: 13px; font-weight: 600; color: var(--text); }
+.progress-track { height: 6px; background: var(--surface3); border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
+.progress-fill { height: 100%; background: var(--amber); border-radius: 99px; transition: width 0.4s ease; }
+
+/* COMPLETE BUTTON */
+.complete-row { padding: 16px 16px 24px; }
+.notes-textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 12px;
+  min-height: 60px;
+  margin-bottom: 12px;
+  resize: none;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  padding: 40px 20px; text-align: center;
+}
+.empty-icon { font-size: 32px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.empty-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="screens" id="screens">
+
+    <!-- HOME / BLOCK LIST -->
+    <div class="screen active" id="screen-home">
+      <div class="hero">
+        <div class="hero-eyebrow">Fase 1 · 12 Blokker</div>
+        <h1 class="hero-title">Composite<br><em>Athlete</em></h1>
+        <p class="hero-meta">Triphasic periodisering · Olympiatoppen pulssoner · Makspuls 188 bpm · 90 min/økt</p>
+      </div>
+
+      <div class="info-box">
+        <strong>Sånn brukes appen</strong>
+        Velg blokk, velg dag, fyll inn vekt og reps mens du trener. Alt lagres automatisk. Trykk eksport-fanen for å sende ukesrapport til Claude.
+      </div>
+
+      <div class="section-title">Treningsblokker</div>
+      <div class="card-list" id="block-list"></div>
+    </div>
+
+    <!-- BLOCK DETAIL -->
+    <div class="screen" id="screen-block">
+      <div class="header">
+        <div class="header-back" onclick="goHome()">‹</div>
+        <div class="header-title-wrap">
+          <div class="header-title" id="block-title"></div>
+          <div class="header-subtitle" id="block-subtitle"></div>
+        </div>
+      </div>
+      <div id="block-content"></div>
+    </div>
+
+    <!-- DAY DETAIL (LOG) -->
+    <div class="screen" id="screen-day">
+      <div class="header">
+        <div class="header-back" onclick="goBlock()">‹</div>
+        <div class="header-title-wrap">
+          <div class="header-title" id="day-title"></div>
+          <div class="header-subtitle" id="day-subtitle"></div>
+        </div>
+      </div>
+      <div id="day-content"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="screen" id="screen-history">
+      <div class="hero">
+        <div class="hero-eyebrow">Progresjon</div>
+        <h1 class="hero-title">Historikk<br><em>per øvelse</em></h1>
+      </div>
+      <div id="history-content"></div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="screen" id="screen-export">
+      <div class="hero">
+        <div class="hero-eyebrow">Eksport</div>
+        <h1 class="hero-title">Send rapport<br><em>til Claude</em></h1>
+        <p class="hero-meta">Kopier teksten under og lim inn i en samtale med Claude.</p>
+      </div>
+
+      <div style="padding: 0 16px;">
+        <div style="display: flex; gap: 8px; margin: 12px 0;">
+          <button class="button" onclick="generateExport('last')" style="margin: 0; flex: 1;">Siste økt</button>
+          <button class="button secondary" onclick="generateExport('week')" style="margin: 0; flex: 1;">Hele blokken</button>
+        </div>
+      </div>
+
+      <textarea class="export-textarea" id="export-text" placeholder="Klikk knapp over for å generere rapport..." readonly></textarea>
+
+      <button class="button secondary" onclick="copyExport()">Kopier til utklippstavle</button>
+
+      <div style="height: 16px;"></div>
+
+      <div class="section-title">Backup av all data</div>
+      <button class="button secondary" onclick="downloadBackup()">Last ned backup-fil</button>
+      <button class="button secondary" onclick="document.getElementById('restore-input').click()">Gjenopprett fra fil</button>
+      <input type="file" id="restore-input" style="display:none" accept="application/json" onchange="restoreBackup(event)">
+
+      <div class="info-box" style="margin-bottom: 30px;">
+        <strong>Tips</strong>
+        Last ned backup-filen ukentlig. AirDrop til Mac eller mail til deg selv. Slik er du trygg om Safari rydder cache.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM TAB BAR -->
+  <div class="tabbar">
+    <div class="tab active" data-tab="home" onclick="switchTab('home')">
+      <div class="tab-icon">▣</div>
+      <div class="tab-label">Trening</div>
+    </div>
+    <div class="tab" data-tab="history" onclick="switchTab('history')">
+      <div class="tab-icon">≡</div>
+      <div class="tab-label">Historikk</div>
+    </div>
+    <div class="tab" data-tab="export" onclick="switchTab('export')">
+      <div class="tab-icon">↗</div>
+      <div class="tab-label">Eksport</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="save-toast" id="save-toast">Lagret</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA — Embedded training program
+// ═══════════════════════════════════════════════════════════════
+const BLOCKS = [{"num": 1, "name": "Bevegelseslæring + eksentrisk base", "dates": "Dag 1-5", "phase": "Mesosyklus 1 · Eksentrisk fase", "flag": "", "theme": "Lær eksentrisk tempo (4 sek ned). Etabler baseline. Ingen ego-last. Teknikk over alt.", "focus": "RPE 5-6 alt. Logg baseline.", "goals": ["Logg baseline: planke, dead hang, hopp, kondiswatt", "Lær 4 sek nedphase", "Push-sled introduksjon"], "expect": "Understimulert følelse er riktig. Senetilpasning kjennes ikke.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · KV goblet squat 2×10 · Hoftesirkler 10/side · Bensving 10/side", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "80-90 kg", "tempo": "4-0-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "4 × 8", "load": "60-80 kg", "tempo": "4-0-1-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "EKSENTRISK: 4 sek NED. Høye håndtak. Lær bevegelsen.", "log_sets": 4}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "0-5 kg DB", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "20 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "BASELINE: Logg alle 4 sett. Stop ved hoftefall.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 6-8% stigning", "zone": "S1: 103-135 bpm"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Band pull-aparts 2×10 · Armrotasjoner 2×10 · Lett incline DB warmup", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "24 kg DB", "tempo": "4-1-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "14 kg DB", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Moderat", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg lett aerob", "detail": "3 × 2 min lett (ikke sprint)", "zone": "S1-S2: 103-154 bpm"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle 5% · Ankelmobilitet · 5 hopp 40% (teknikk)", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "8 runder", "load": "Maks på arbeid", "tempo": "30s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 8, "is_cardio": true}, {"name": "Push-sled", "sets": "4 × 20 m", "load": "Lett (2 plates)", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 4}, {"name": "Drag-sled", "sets": "4 × 30 m", "load": "2 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 4}, {"name": "Bredt hopp", "sets": "4 × 5", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 4, "is_distance": true}, {"name": "Farmer's carry", "sets": "3 × 40 m", "load": "20 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 3}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts 2×15 · Face pulls 2×10 · Lett ro warmup", "exercises": [{"name": "Assistert pull-up", "sets": "4 × 6-8", "load": "Tykt strikk", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "2 sek opp, 1 sek hold, 4 sek SAKTE ned. Logg reps.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "40-45 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": {"name": "Ski erg sprint", "detail": "3 × 20 sek 70% innsats", "zone": "S4: 164-173 bpm"}}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Push-ups 2×10 · Benk warmup: 40%×15, 60%×8", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "40/50/58/63/63 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "Logg total reps over 4 sett (eks. 6+5+4+3 = 18).", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "50 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "38-42 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "20 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "4 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 2, "name": "Eksentrisk progresjon — øk last", "dates": "Dag 6-10", "phase": "Mesosyklus 1 · Eksentrisk fase", "flag": "", "theme": "Hold 4 sek nedphase. Øk vekt der RPE ≤6 i blokk 1. Slå baseline-tall.", "focus": "Slå baseline med 5%. Eksentrisk strengt.", "goals": ["Slå kondiswatt med 5%", "Planke +5-10 sek per sett", "Push-sled: 3 plates"], "expect": "Sårhet reduseres. Eksentrisk tempo sitter bedre.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · Goblet squat 2×10 · Hoftesirkler · Bensving · Mobilitet", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "90-100 kg", "tempo": "4-0-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "4 × 8", "load": "80-90 kg", "tempo": "4-0-1-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "EKSENTRISK 4 sek NED. Hoftene tilbake.", "log_sets": 4}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "5-8 kg DB", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "22-24 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "Slå blokk 1 med 5-10 sek per sett.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 7% stigning", "zone": "S1: 103-135 bpm"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts · Armrotasjoner · Incline DB warmup", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "26-28 kg DB", "tempo": "4-1-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "16 kg DB", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Moderat+", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg lett aerob", "detail": "5 × 2 min lett aerob", "zone": "S1-S2: 103-154 bpm"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle 5% · Ankelmob · 5 hopp 50%", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "8 runder", "load": "Maks på arbeid", "tempo": "30s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 8, "is_cardio": true}, {"name": "Push-sled", "sets": "4 × 25 m", "load": "3 plates", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 4}, {"name": "Drag-sled", "sets": "4 × 35 m", "load": "3 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 4}, {"name": "Bredt hopp", "sets": "4 × 5", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 4, "is_distance": true}, {"name": "Farmer's carry", "sets": "3 × 40 m", "load": "20-22.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 3}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts · Face pulls · Ro warmup", "exercises": [{"name": "Assistert pull-up", "sets": "4 × 7-8", "load": "Tykt strikk", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "Sikt på 7-8 reps. 4 sek NED.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "45 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": {"name": "Ski erg sprint", "detail": "3 × 25 sek 75%", "zone": "S4: 164-173 bpm"}}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Push-ups · Benk warmup: 40%×15, 65%×6", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "42/52/60/65/65 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "Slå blokk 1 total reps. 4 sek nedphase.", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "52.5 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "40 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "20 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "4 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 3, "name": "Intensivering — siste sett RPE 7-8", "dates": "Dag 11-15", "phase": "Mesosyklus 1 · Eksentrisk topp", "flag": "", "theme": "Avslutter mesosyklus 1. Siste arbeidsett RPE 7-8. Etter denne: deload.", "focus": "Siste sett til RPE 7-8. Ikke alle sett.", "goals": ["Legpress 110-120 kg × 10", "Benk 70 kg første gang", "10 kondisrunder"], "expect": "Første uke du virkelig merker anstrengelsen. Blokk 4 er deload.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · Goblet squat · Hoftesirkler · Bensving · Mobilitet", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "100-110 kg", "tempo": "4-0-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "4 × 6", "load": "90-100 kg", "tempo": "4-0-1-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "EKSENTRISK 4 sek NED. Rep ned til 6, vekt opp.", "log_sets": 4}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "8-10 kg DB", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "26 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "Sikt 50+ sek beste sett.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 8% stigning", "zone": "S1: 103-135 bpm"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts · Armrotasjoner · Incline warmup", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "28-30 kg DB", "tempo": "4-1-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "16-18 kg", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Moderat+", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg lett aerob", "detail": "3 × 3 min lett aerob", "zone": "S1-S2: 103-154 bpm"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle · Hopp warmup", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "10 runder", "load": "Maks på arbeid", "tempo": "30s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 10, "is_cardio": true}, {"name": "Push-sled", "sets": "4 × 30 m", "load": "4 plates", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 4}, {"name": "Drag-sled", "sets": "4 × 40 m", "load": "3-4 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 4}, {"name": "Bredt hopp", "sets": "4 × 5", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 4, "is_distance": true}, {"name": "Farmer's carry", "sets": "4 × 40 m", "load": "22.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 4}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts · Face pulls", "exercises": [{"name": "Assistert pull-up", "sets": "4 × 8", "load": "Tykt strikk", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "Sikt 4×8. Siste sett RPE 8.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "47.5 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": {"name": "Ski erg sprint", "detail": "4 × 25 sek 80%", "zone": "S4-S5"}}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "45/55/62.5/70/70 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "Ny total-PR. Prøv ett sett tynt strikk til slutt.", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "55 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "42.5 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "25 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "4 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 4, "name": "DELOAD", "dates": "Dag 16-20", "phase": "Mesosyklus 1 · Deload", "flag": "DELOAD", "theme": "Aktiv supercompensasjon. Volum -40%. Vekt -20%. Ingen sprint. Ingen nye stimuli.", "focus": "DELOAD: Lett og kontrollert. RPE 4-5.", "goals": ["Reduser alle vekter 20%", "Ingen sprint-intervaller", "8+ timer søvn"], "expect": "Etter dette deload: sterkere enn blokk 3. Mesosyklus 2 starter.", "days": [{"focus": "Underkropp + Kjerne", "cns": "LOW", "warmup": "Lett sykkel · Mobilitet", "exercises": [{"name": "Legpress", "sets": "3 × 12", "load": "80-85 kg", "tempo": "3-0-1-0", "rest": "2 min", "rpe": "RPE 4-5", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 3}, {"name": "Trap-bar markløft", "sets": "3 × 6", "load": "75 kg", "tempo": "3-0-1-0", "rest": "2.5 min", "rpe": "RPE 5", "note": "DELOAD: -20% vekt.", "log_sets": 3}, {"name": "FFESS / Bulgarian split squat", "sets": "2 × 8/side", "load": "5 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 4", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 2}, {"name": "DB Romanian deadlift", "sets": "2 × 10", "load": "20 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 4", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 2}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "DELOAD.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Mølle", "detail": "20 min, 5% lett", "zone": "S1: 103-135 bpm"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts", "exercises": [{"name": "Incline DB press", "sets": "3 × 12", "load": "22 kg DB", "tempo": "3-1-1-0", "rest": "2 min", "rpe": "RPE 4-5", "note": "Skulderblad bakover. DELOAD.", "log_sets": 3}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "14 kg DB", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Lett", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ro lett", "detail": "20 min moderat (RPE 4-5)", "zone": "S1-S2"}}, {"focus": "Kondisjon — DELOAD", "cns": "LOW", "warmup": "Lett mobilitet", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "4 runder", "load": "Lett kontinuerlig", "tempo": "20 min lett aerob", "rest": "Innbygd", "rpe": "S1", "note": "Hard = SPRINT. Logg watt/pace. DELOAD: 20 min lett kontinuerlig.", "log_sets": 4, "is_cardio": true}, {"name": "Push-sled", "sets": "3 × 20 m", "load": "2 plates", "tempo": "—", "rest": "2 min", "rpe": "S3", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 3}, {"name": "Drag-sled", "sets": "2 × 30 m", "load": "2 plates", "tempo": "—", "rest": "90 sek", "rpe": "S2", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 2}, {"name": "Bredt hopp", "sets": "3 × 4", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 3, "is_distance": true}, {"name": "Farmer's carry", "sets": "2 × 40 m", "load": "20 kg", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 2}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts", "exercises": [{"name": "Assistert pull-up", "sets": "3 × 6", "load": "Tykt strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 5", "note": "DELOAD.", "log_sets": 3}, {"name": "Sittende kabelroing", "sets": "3 × 12", "load": "38 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 4-5", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 3}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": null}, {"focus": "Full Styrke — DELOAD", "cns": "LOW", "warmup": "5 min ro · Lett benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "3 × 5", "load": "42.5/52.5/60 kg", "tempo": "3-1-1-0", "rest": "3 min", "rpe": "RPE 5", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 3}, {"name": "Assistert pull-up nær failure", "sets": "3 × 6", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 5", "note": "DELOAD.", "log_sets": 3}, {"name": "Barbell row (Pendlay)", "sets": "3 × 8", "load": "45 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 5", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 3}, {"name": "Overhead press", "sets": "3 × 10", "load": "35 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 4-5", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "2 × 30 m", "load": "20 kg", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 2}, {"name": "Push-sled sprint (finisher)", "sets": "3 × 15 m", "load": "2 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 3}], "finisher": null}]}, {"num": 5, "name": "Isometrisk introduksjon — pause i bunnen", "dates": "Dag 21-25", "phase": "Mesosyklus 2 · Isometrisk fase", "flag": "", "theme": "Tempo skifter: 3-2-1-0. 2 sek pause i bunnen. Ny nevral stimulus. Tendon-stiffness.", "focus": "Isometrisk pause overalt. Vekt øker gradvis.", "goals": ["Lær 2 sek pause i bunnen", "Pull-ups: prøv tynnere strikk", "Planke 60+ sek"], "expect": "Bevegelsene kjennes annerledes. Ny adaptasjon.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · Goblet squat · Mobilitet", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "120-130 kg", "tempo": "3-2-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "4 × 6", "load": "100-110 kg", "tempo": "3-2-1-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "ISOMETRISK: 3 sek ned, 2 sek PAUSE i bunnen, 1 sek opp.", "log_sets": 4}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "12-15 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "28-30 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "Mål 60+ sek beste sett.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 8% stigning", "zone": "S1: 103-135 bpm"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts · Armrotasjoner", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "30-32 kg DB", "tempo": "3-2-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "18-20 kg", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Moderat+", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg lett aerob", "detail": "3 × 3 min lett aerob", "zone": "S1-S2"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle · Hopp warmup", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "8 runder", "load": "Maks på arbeid", "tempo": "45s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 8, "is_cardio": true}, {"name": "Push-sled", "sets": "4 × 25 m", "load": "5 plates", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 4}, {"name": "Drag-sled", "sets": "4 × 40 m", "load": "4 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 4}, {"name": "Bredt hopp", "sets": "4 × 5", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 4, "is_distance": true}, {"name": "Farmer's carry", "sets": "4 × 50 m", "load": "25 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 4}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts · Face pulls", "exercises": [{"name": "Assistert pull-up", "sets": "4 × 6-8", "load": "Tykt → tynt strikk", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "ISOMETRISK: 2 sek HOLD øverst. Prøv tynt strikk.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "50 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": null}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "45/57.5/67.5/72.5/72.5 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "ISOMETRISK: 2 sek HOLD øverst.", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "57.5 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "42.5 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "27.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 6, "name": "Isometrisk bygging — slå blokk 5", "dates": "Dag 26-30", "phase": "Mesosyklus 2 · Isometrisk", "flag": "", "theme": "Slå alle blokk 5-tall. Isometrisk pause sitter nå.", "focus": "Hold 2 sek pause. Vekt opp.", "goals": ["Legpress 130-140 kg", "Benk 75 kg", "Tynt strikk på 2 sett pull-ups"], "expect": "Sterkere enn blokk 3. Isometrisk øker nevral aktivering.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · Goblet squat · Mobilitet", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "130-140 kg", "tempo": "3-2-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "4 × 6", "load": "110-115 kg", "tempo": "3-2-1-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "ISOMETRISK: 2 sek pause i bunnen.", "log_sets": 4}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "15 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "30 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "Mål 65-75 sek.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 8% stigning", "zone": "S1"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "32-34 kg DB", "tempo": "3-2-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "20 kg", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Moderat+", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg", "detail": "4 × 3 min lett", "zone": "S1-S2"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle · Hopp warmup", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "7 runder", "load": "Maks på arbeid", "tempo": "45s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 7, "is_cardio": true}, {"name": "Push-sled", "sets": "4 × 25 m", "load": "5-6 plates", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 4}, {"name": "Drag-sled", "sets": "4 × 40 m", "load": "4 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 4}, {"name": "Bredt hopp", "sets": "5 × 5", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 5, "is_distance": true}, {"name": "Farmer's carry", "sets": "4 × 50 m", "load": "27.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 4}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts", "exercises": [{"name": "Assistert pull-up", "sets": "4 × 8", "load": "Tynt strikk på 2 sett", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "Tynt strikk progresjon. 2 sek hold.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "55 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": null}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "45/57.5/67.5/75/75 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "Slå blokk 5 total. 2 sek hold øverst.", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "60 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "45 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "30 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 7, "name": "Isometrisk topp", "dates": "Dag 31-35", "phase": "Mesosyklus 2 · Isometrisk topp", "flag": "TOPP", "theme": "Høyeste belastning i meso 2. RPE 7-8 siste sett. Blokk 8 er deload.", "focus": "Push topp vekter. Blokk 8 er deload — push i dag.", "goals": ["Legpress 140-150 kg × 8", "Benk 77.5 kg", "Tynt strikk primær", "Planke 75+ sek"], "expect": "Tøffeste uka i meso 2.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · Goblet squat · Mobilitet", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "140-150 kg", "tempo": "3-2-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "4 × 6", "load": "115-125 kg", "tempo": "3-2-1-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "ISOMETRISK topp. 2 sek pause.", "log_sets": 4}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "15-18 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "30-32 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "Mål 75+ sek.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 8% stigning", "zone": "S1"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "34-36 kg DB", "tempo": "3-2-1-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "20 kg", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Moderat+", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg", "detail": "4 × 3 min lett", "zone": "S1-S2"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle · Hopp warmup", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "8 runder", "load": "Maks på arbeid", "tempo": "45s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 8, "is_cardio": true}, {"name": "Push-sled", "sets": "4 × 25 m", "load": "6 plates", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 4}, {"name": "Drag-sled", "sets": "4 × 40 m", "load": "4-5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 4}, {"name": "Bredt hopp", "sets": "5 × 5", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 5, "is_distance": true}, {"name": "Farmer's carry", "sets": "4 × 50 m", "load": "27.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 4}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts", "exercises": [{"name": "Assistert pull-up", "sets": "4 × 8", "load": "Tynt strikk primær", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "Tynt strikk alle 4 sett.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "57.5 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": null}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "45/60/70/77.5/77.5 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "Topp pull-up volum. Logg total.", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "62.5 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "47.5 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "30 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 8, "name": "DELOAD — Mesosyklus 2", "dates": "Dag 36-40", "phase": "Mesosyklus 2 · Deload", "flag": "DELOAD", "theme": "Volum -40%. Vekt -20%. Supercompensasjon før mesosyklus 3.", "focus": "DELOAD: Lett. Sov. Spis.", "goals": ["Vekter -20%", "Ingen sprint", "8 timer søvn"], "expect": "Etter dette: sterkere enn blokk 7.", "days": [{"focus": "Underkropp — DELOAD", "cns": "LOW", "warmup": "Lett sykkel · Mobilitet", "exercises": [{"name": "Legpress", "sets": "3 × 12", "load": "110 kg", "tempo": "3-1-2-0", "rest": "2 min", "rpe": "RPE 4-5", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 3}, {"name": "Trap-bar markløft", "sets": "3 × 6", "load": "90 kg", "tempo": "3-1-2-0", "rest": "2.5 min", "rpe": "RPE 5", "note": "DELOAD.", "log_sets": 3}, {"name": "FFESS / Bulgarian split squat", "sets": "2 × 8/side", "load": "8 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 4", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 2}, {"name": "DB Romanian deadlift", "sets": "2 × 10", "load": "22 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 4", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 2}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "DELOAD.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Mølle", "detail": "20 min, 5% lett", "zone": "S1"}}, {"focus": "Overkropp Push — DELOAD", "cns": "LOW", "warmup": "5 min ro · Pull-aparts", "exercises": [{"name": "Incline DB press", "sets": "3 × 12", "load": "24 kg DB", "tempo": "3-1-1-0", "rest": "2 min", "rpe": "RPE 4-5", "note": "Skulderblad bakover. DELOAD.", "log_sets": 3}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "14 kg DB", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Lett", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ro lett", "detail": "20 min moderat", "zone": "S1-S2"}}, {"focus": "Kondisjon — DELOAD", "cns": "LOW", "warmup": "Lett mobilitet", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "4 runder", "load": "Lett kontinuerlig", "tempo": "20 min lett aerob", "rest": "Innbygd", "rpe": "S1", "note": "Hard = SPRINT. Logg watt/pace. DELOAD: 20 min lett kontinuerlig.", "log_sets": 4, "is_cardio": true}, {"name": "Push-sled", "sets": "3 × 20 m", "load": "3 plates", "tempo": "—", "rest": "2 min", "rpe": "S3", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 3}, {"name": "Drag-sled", "sets": "2 × 30 m", "load": "3 plates", "tempo": "—", "rest": "90 sek", "rpe": "S2", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 2}, {"name": "Bredt hopp", "sets": "3 × 4", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 3, "is_distance": true}, {"name": "Farmer's carry", "sets": "2 × 40 m", "load": "20 kg", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 2}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull — DELOAD", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts", "exercises": [{"name": "Assistert pull-up", "sets": "3 × 6", "load": "Tykt strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 5", "note": "DELOAD.", "log_sets": 3}, {"name": "Sittende kabelroing", "sets": "3 × 12", "load": "40 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 4-5", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 3}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": null}, {"focus": "Full Styrke — DELOAD", "cns": "LOW", "warmup": "5 min ro · Lett benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "3 × 5", "load": "42.5/52.5/62.5 kg", "tempo": "3-1-1-0", "rest": "3 min", "rpe": "RPE 5", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 3}, {"name": "Assistert pull-up nær failure", "sets": "3 × 6", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 5", "note": "DELOAD.", "log_sets": 3}, {"name": "Barbell row (Pendlay)", "sets": "3 × 8", "load": "47.5 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 5", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 3}, {"name": "Overhead press", "sets": "3 × 10", "load": "35 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 4-5", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "2 × 30 m", "load": "20 kg", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 2}, {"name": "Push-sled sprint (finisher)", "sets": "3 × 15 m", "load": "3 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 3}], "finisher": null}]}, {"num": 9, "name": "Konsentrisk introduksjon — eksplosivitet", "dates": "Dag 41-45", "phase": "Mesosyklus 3 · Konsentrisk fase", "flag": "", "theme": "Tempo: 3-0-X-0. X = EKSPLOSIVT. Senen er klar — uttrykk kraften.", "focus": "Eksplosiv konsentrisk. KB swing introduseres.", "goals": ["Trap-bar 120-130 kg eksplosivt", "Første unassisted pull-up forsøk", "Box jump intro"], "expect": "Etter eks og iso: senen er klar. Forventer store krafthopp.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · Glute bridges 2×15 · Banded clam 2×15", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "150-160 kg", "tempo": "3-0-X-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "5 × 4", "load": "120-130 kg", "tempo": "3-0-X-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "KONSENTRISK: 3 sek ned, EKSPLOSIVT opp. KB swing 4×15 (24-32 kg) som accessory.", "log_sets": 5}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "18-20 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "30 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "Mål 80+ sek beste sett. RKC planke som alternativ.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 8-9% stigning", "zone": "S1"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts · MB rotasjonskast 2×8", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "34-38 kg DB", "tempo": "3-0-X-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "20-22 kg", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Moderat+", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg lett aerob", "detail": "3 × 3 min moderat", "zone": "S2"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle · Progressiv hopp warmup", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "6 runder", "load": "Maks på arbeid", "tempo": "60s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 6, "is_cardio": true}, {"name": "Push-sled", "sets": "5 × 15 m", "load": "6-7 plates", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 5}, {"name": "Drag-sled", "sets": "3 × 50 m", "load": "4 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 3}, {"name": "Bredt hopp", "sets": "4 × 5 (PR-jakt)", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 4, "is_distance": true}, {"name": "Farmer's carry", "sets": "4 × 50 m", "load": "30-32.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 4}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts · Face pulls", "exercises": [{"name": "Assistert pull-up", "sets": "4 × maks", "load": "BW + tynt strikk", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "Start hvert sett med unassisted forsøk. Logg unassisted reps SEPARAT.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "55-60 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": null}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "47.5/60/70/80/80 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "Unassisted forsøk hvert sett.", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "+2.5 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "Push-press 45-50 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "30 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 10, "name": "Konsentrisk bygging", "dates": "Dag 46-50", "phase": "Mesosyklus 3 · Konsentrisk", "flag": "", "theme": "Gå forbi alle meso 2-tall.", "focus": "Slå meso 2 tall.", "goals": ["Legpress 160-170 kg", "2-3 unassisted pull-ups", "Benk 82.5 kg", "Planke 90+ sek"], "expect": "Sterkere enn noen gang. Tredje meso etter deload virker overraskende.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · Aktivering · Mobilitet", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "160-170 kg", "tempo": "3-0-X-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "5 × 4", "load": "130-140 kg", "tempo": "3-0-X-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "KONSENTRISK eksplosiv. KB swing 4×15.", "log_sets": 5}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "20 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "30-32 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "RKC planke 3 × 30-45 sek.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 9% stigning", "zone": "S1"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts · MB-kast", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "36-40 kg DB", "tempo": "3-0-X-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "22 kg", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Moderat+", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg moderat", "detail": "3 × 3 min moderat", "zone": "S2"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle · Hopp warmup", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "7 runder", "load": "Maks på arbeid", "tempo": "60s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 7, "is_cardio": true}, {"name": "Push-sled", "sets": "5 × 15 m", "load": "7 plates", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 5}, {"name": "Drag-sled", "sets": "3 × 50 m", "load": "4-5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 3}, {"name": "Bredt hopp", "sets": "4 × 5", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 4, "is_distance": true}, {"name": "Farmer's carry", "sets": "4 × 50 m", "load": "32.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 4}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts", "exercises": [{"name": "Assistert pull-up", "sets": "4 × maks", "load": "Tynt strikk + unassisted forsøk", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "2-3 unassisted reps mulig.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "60 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": null}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "47.5/62.5/72.5/82.5/82.5 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "Slå blokk 9 unassisted reps.", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "62.5 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "Push-press 50 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "30-32.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 11, "name": "FASE-TOPP", "dates": "Dag 51-55", "phase": "Mesosyklus 3 · Fase-topp", "flag": "FASE-TOPP", "theme": "Topp vekter. Alt bygget i 10 blokker uttrykkes her.", "focus": "Push topp. Blokk 12 er taper og test.", "goals": ["Legpress 170-180 kg", "Trap-bar 140-150 kg", "3-5 unassisted pull-ups", "Benk 85 kg ny PR", "Planke 100+ sek"], "expect": "Tøffeste uka i hele fase 1.", "days": [{"focus": "Underkropp + Kjerne", "cns": "HIGH", "warmup": "5 min sykkel · Aktivering · Mobilitet", "exercises": [{"name": "Legpress", "sets": "4 × 10", "load": "170-180 kg", "tempo": "3-0-X-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 4}, {"name": "Trap-bar markløft", "sets": "5 × 4", "load": "140-150 kg", "tempo": "3-0-X-0", "rest": "2.5 min", "rpe": "RPE 6-7", "note": "FASE-TOPP. Eksplosiv konsentrisk.", "log_sets": 5}, {"name": "FFESS / Bulgarian split squat", "sets": "3 × 10/side", "load": "22-24 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 3}, {"name": "DB Romanian deadlift", "sets": "3 × 10", "load": "32 kg/hånd", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 3}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "4 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "Sikt 100+ sek.", "log_sets": 4, "is_time": true}], "finisher": {"name": "Incline mølle", "detail": "15 min, 9% stigning", "zone": "S1"}}, {"focus": "Overkropp Push", "cns": "LOW", "warmup": "5 min ro · Pull-aparts · MB-kast", "exercises": [{"name": "Incline DB press", "sets": "4 × 10", "load": "38-42 kg DB", "tempo": "3-0-X-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Skulderblad bakover. Eksentrisk/isometrisk/konsentrisk varierer per blokk.", "log_sets": 4}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "22-24 kg", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Tung", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg moderat", "detail": "4 × 3 min moderat", "zone": "S2"}}, {"focus": "Kondisjon + Kraft + Bæring", "cns": "HIGH", "warmup": "5 min mølle · Hopp warmup", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "8 runder", "load": "Maks på arbeid", "tempo": "60s hard / 90s rolig", "rest": "Innbygd", "rpe": "S5/S1", "note": "Hard = SPRINT. Logg watt/pace. Slå forrige blokk med 5%.", "log_sets": 8, "is_cardio": true}, {"name": "Push-sled", "sets": "5 × 15 m", "load": "7 plates", "tempo": "—", "rest": "2 min", "rpe": "S5", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 5}, {"name": "Drag-sled", "sets": "3 × 50 m", "load": "5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 3}, {"name": "Bredt hopp", "sets": "5 × 5 PR-jakt", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 5, "is_distance": true}, {"name": "Farmer's carry", "sets": "4 × 50 m", "load": "32.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 4}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "Overkropp Pull + Kjerne", "cns": "LOW", "warmup": "5 min sykkel · Pull-aparts", "exercises": [{"name": "Assistert pull-up", "sets": "4 × maks", "load": "Unassisted primær", "tempo": "2-1-4-0", "rest": "2 min", "rpe": "RPE 7-8", "note": "3-5 unassisted reps mulig.", "log_sets": 4}, {"name": "Sittende kabelroing", "sets": "4 × 12", "load": "62.5 kg", "tempo": "2-1-2-1", "rest": "90 sek", "rpe": "RPE 6-7", "note": "Trekk til nedre bryst. 1 sek klem.", "log_sets": 4}, {"name": "Kabel face pull", "sets": "3 × 15", "load": "Lett", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 4-5", "note": "Skulderbehandling. Ikke valgfri.", "log_sets": 3}, {"name": "Incline DB curl", "sets": "3 × 12", "load": "12-16 kg", "tempo": "3-0-2-1", "rest": "60 sek", "rpe": "RPE 5", "note": "Full bane. 1 sek klem øverst.", "log_sets": 3}, {"name": "Planke (forearm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "2. plankeøkt. Sammenlign med dag 1.", "log_sets": 3, "is_time": true}, {"name": "Pallof press", "sets": "3 × 10/side", "load": "Moderat", "tempo": "2-1-2-0", "rest": "60 sek", "rpe": "RPE 5-6", "note": "Anti-rotasjon kjernearbeid.", "log_sets": 3}], "finisher": null}, {"focus": "Full Styrke + Kraft", "cns": "HIGH", "warmup": "5 min ro · Pull-aparts · Benk warmup", "exercises": [{"name": "Flat benkpress med stang", "sets": "5 × 5", "load": "47.5/65/75/85/85 kg", "tempo": "4-1-1-0", "rest": "3 min", "rpe": "RPE 7", "note": "Skulderblad bakover. Primær benkdag.", "log_sets": 5}, {"name": "Assistert pull-up nær failure", "sets": "4 × maks", "load": "Strikk", "tempo": "2-1-3-0", "rest": "2 min", "rpe": "RPE 8", "note": "Ny benk-PR. Unassisted reps.", "log_sets": 4}, {"name": "Barbell row (Pendlay)", "sets": "4 × 8", "load": "65 kg", "tempo": "1-1-3-0", "rest": "2 min", "rpe": "RPE 6-7", "note": "Stang fra gulv hvert rep. 3 sek ned.", "log_sets": 4}, {"name": "Overhead press", "sets": "3 × 8", "load": "Push-press 52.5 kg", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 6", "note": "Skulderhelsemarkør.", "log_sets": 3}, {"name": "Farmer's carry", "sets": "3 × 30 m", "load": "32.5 kg/hånd", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "2. bæreøkt i uka.", "log_sets": 3}, {"name": "Push-sled sprint (finisher)", "sets": "4 × 15 m", "load": "5 plates", "tempo": "—", "rest": "90 sek", "rpe": "S5", "note": "Maks akselerasjon.", "log_sets": 4}], "finisher": null}]}, {"num": 12, "name": "BENCHMARK TAPER", "dates": "Dag 56-60 + testdag", "phase": "Taper + Benchmark-test", "flag": "BENCHMARK", "theme": "Volum -50%. To hviledager før test. Test på dag 6.", "focus": "TAPER: Lett. Test er målet.", "goals": ["Lett dag 1-3", "Full hvil dag 4-5", "Test dag 6"], "expect": "Understimulert = supercompensasjon. Testen vil overraske.", "days": [{"focus": "Underkropp — TAPER", "cns": "LOW", "warmup": "5 min lett ro · Mobilitet", "exercises": [{"name": "Legpress", "sets": "3 × 12", "load": "120 kg", "tempo": "3-0-2-0", "rest": "2 min", "rpe": "RPE 4-5", "note": "Føtter hoftebredde, mid-plate. Ikke lås ut knær.", "log_sets": 3}, {"name": "Trap-bar markløft", "sets": "3 × 4", "load": "110 kg", "tempo": "3-0-2-0", "rest": "2.5 min", "rpe": "RPE 5", "note": "TAPER: -30%.", "log_sets": 3}, {"name": "FFESS / Bulgarian split squat", "sets": "2 × 8/side", "load": "10 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 4", "note": "Front-fot 3-5 cm elevert (blokk 1-4). RFESS bak-fot elevert (blokk 5+).", "log_sets": 2}, {"name": "DB Romanian deadlift", "sets": "2 × 10", "load": "24 kg", "tempo": "4-1-1-0", "rest": "90 sek", "rpe": "RPE 4", "note": "Hengsel til hamstring-strekk. Ingen runding.", "log_sets": 2}, {"name": "Legcurl maskin", "sets": "3 × 12", "load": "Moderat", "tempo": "3-1-2-0", "rest": "90 sek", "rpe": "RPE 5", "note": "Eksentrisk fokus.", "log_sets": 3}, {"name": "Planke (underarm)", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "—", "note": "Siste planke-økt før test.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Mølle", "detail": "10 min lett", "zone": "S1"}}, {"focus": "Overkropp Push — TAPER", "cns": "LOW", "warmup": "5 min lett ro", "exercises": [{"name": "Incline DB press", "sets": "3 × 12", "load": "26 kg", "tempo": "3-1-1-0", "rest": "2 min", "rpe": "RPE 4-5", "note": "Skulderblad bakover. DELOAD.", "log_sets": 3}, {"name": "DB skulderpress", "sets": "3 × 10", "load": "16 kg", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Sittende. Albuer 45°. Flag ubehag.", "log_sets": 3}, {"name": "Brystmaskin", "sets": "3 × 10", "load": "Lett", "tempo": "3-0-2-0", "rest": "90 sek", "rpe": "RPE 5-6", "note": "Ekstra pressevolum.", "log_sets": 3}, {"name": "Kabel lateral raise", "sets": "3 × 15", "load": "Lett", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Skulderbehandling.", "log_sets": 3}, {"name": "Triceps pushdown", "sets": "3 × 15", "load": "Moderat", "tempo": "2-0-2-0", "rest": "60 sek", "rpe": "RPE 5", "note": "Albuer inntil. Full ekstensjon.", "log_sets": 3}, {"name": "Dead hang", "sets": "3 × maks", "load": "Kroppsvekt", "tempo": "—", "rest": "90 sek", "rpe": "—", "note": "Logg tid. Aktive skuldre.", "log_sets": 3, "is_time": true}], "finisher": {"name": "Ski erg aktivering", "detail": "4 × 20 sek 70%", "zone": "S3"}}, {"focus": "Kondis — TAPER", "cns": "LOW", "warmup": "Mobilitet", "exercises": [{"name": "Ski erg / ro erg — intervaller", "sets": "Sykkel lett", "load": "Lett kontinuerlig", "tempo": "20 min S1", "rest": "Innbygd", "rpe": "S1", "note": "Hard = SPRINT. Logg watt/pace. DELOAD: 20 min lett kontinuerlig.", "log_sets": 1, "is_cardio": true}, {"name": "Push-sled", "sets": "3 × 15 m", "load": "3 plates", "tempo": "—", "rest": "2 min", "rpe": "S3", "note": "Foroverbøyd ~45°. Korte kraftige skritt.", "log_sets": 3}, {"name": "Drag-sled", "sets": "2 × 30 m", "load": "3 plates", "tempo": "—", "rest": "90 sek", "rpe": "S2", "note": "Tau rundt hofte. Bakside-kjede.", "log_sets": 2}, {"name": "Bredt hopp", "sets": "4 × 4 (teknikk)", "load": "Kroppsvekt", "tempo": "—", "rest": "60 sek", "rpe": "Maks kraft", "note": "Mål beste hopp. Logg avstand i cm.", "log_sets": 4, "is_distance": true}, {"name": "Farmer's carry", "sets": "2 × 40 m", "load": "22.5 kg", "tempo": "—", "rest": "90 sek", "rpe": "S3", "note": "Skuldre pakket. GBRS benchmark.", "log_sets": 2}, {"name": "Incline mølle (finisher)", "sets": "1 × 15 min", "load": "Kroppsvekt", "tempo": "—", "rest": "—", "rpe": "S1-S2", "note": "Aerob base. Hold under 154 bpm.", "log_sets": 1, "is_cardio": true}], "finisher": null}, {"focus": "HVILE — Full hvil", "cns": "REST", "warmup": "—", "exercises": [{"name": "Full hvil", "sets": "Obligatorisk", "load": "—", "tempo": "—", "rest": "—", "rpe": "—", "note": "Ingen trening. 30 min spasertur maks. 9 timer søvn.", "log_sets": 0}, {"name": "Visualisering", "sets": "10 min", "load": "—", "tempo": "—", "rest": "—", "rpe": "—", "note": "Gå gjennom alle 7 tester mentalt.", "log_sets": 0}, {"name": "Skulder + kne vedlikehold", "sets": "10 min", "load": "—", "tempo": "—", "rest": "—", "rpe": "—", "note": "Band pull-aparts 3×15. Face pulls 3×15.", "log_sets": 0}], "finisher": null}, {"focus": "TESTDAG forberedelse", "cns": "REST", "warmup": "—", "exercises": [{"name": "Full hvil", "sets": "Obligatorisk", "load": "—", "tempo": "—", "rest": "—", "rpe": "—", "note": "Ingen trening.", "log_sets": 0}, {"name": "Lett spasertur", "sets": "20 min", "load": "—", "tempo": "—", "rest": "—", "rpe": "—", "note": "Blodgjennomstrømning.", "log_sets": 0}, {"name": "Pakk utstyr", "sets": "—", "load": "—", "tempo": "—", "rest": "—", "rpe": "—", "note": "Klær, vann, målebånd, loggapp.", "log_sets": 0}, {"name": "Mental forberedelse", "sets": "—", "load": "—", "tempo": "—", "rest": "—", "rpe": "—", "note": "12 blokker bygget. Test det.", "log_sets": 0}], "finisher": null}]}];
+const ZONES = {"S1": {"puls": "103-135", "label": "Restitusjon", "color": "#4A90D9"}, "S2": {"puls": "135-154", "label": "Utholdenhet", "color": "#27AE60"}, "S3": {"puls": "154-164", "label": "Terskel", "color": "#E67E22"}, "S4": {"puls": "164-173", "label": "VO2maks", "color": "#E74C3C"}, "S5": {"puls": "173-188", "label": "Maks", "color": "#8E44AD"}};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const STORAGE_KEY = 'composite_athlete_log_v1';
+let currentBlock = null;
+let currentDay = null;
+let currentTab = 'home';
+
+function getLog() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveLog(log) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
+}
+function setSetValue(blockNum, dayNum, exIdx, setIdx, field, value) {
+  const log = getLog();
+  const key = `b${blockNum}d${dayNum}`;
+  log[key] = log[key] || { exercises: {}, completed: false, notes: '' };
+  log[key].exercises[exIdx] = log[key].exercises[exIdx] || { sets: {} };
+  log[key].exercises[exIdx].sets[setIdx] = log[key].exercises[exIdx].sets[setIdx] || {};
+  log[key].exercises[exIdx].sets[setIdx][field] = value;
+  saveLog(log);
+  showSaveToast();
+}
+function getSetValue(blockNum, dayNum, exIdx, setIdx, field) {
+  const log = getLog();
+  return log[`b${blockNum}d${dayNum}`]?.exercises?.[exIdx]?.sets?.[setIdx]?.[field] || '';
+}
+function setDayNotes(blockNum, dayNum, notes) {
+  const log = getLog();
+  const key = `b${blockNum}d${dayNum}`;
+  log[key] = log[key] || { exercises: {}, completed: false, notes: '' };
+  log[key].notes = notes;
+  saveLog(log);
+}
+function getDayNotes(blockNum, dayNum) {
+  return getLog()[`b${blockNum}d${dayNum}`]?.notes || '';
+}
+function setDayCompleted(blockNum, dayNum, completed) {
+  const log = getLog();
+  const key = `b${blockNum}d${dayNum}`;
+  log[key] = log[key] || { exercises: {}, completed: false, notes: '' };
+  log[key].completed = completed;
+  log[key].completedAt = completed ? new Date().toISOString() : null;
+  saveLog(log);
+  showSaveToast(completed ? 'Økt fullført!' : 'Lagret');
+}
+function isDayCompleted(blockNum, dayNum) {
+  return !!getLog()[`b${blockNum}d${dayNum}`]?.completed;
+}
+function blockProgress(blockNum) {
+  const log = getLog();
+  let done = 0;
+  for (let d = 0; d < 5; d++) {
+    if (log[`b${blockNum}d${d}`]?.completed) done++;
+  }
+  return done;
+}
+
+let saveToastTimeout;
+function showSaveToast(msg = 'Lagret') {
+  const toast = document.getElementById('save-toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(saveToastTimeout);
+  saveToastTimeout = setTimeout(() => toast.classList.remove('show'), 1400);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function showScreen(id, direction = 'forward') {
+  const screens = document.querySelectorAll('.screen');
+  const current = document.querySelector('.screen.active');
+  const target = document.getElementById(id);
+
+  if (current === target) return;
+
+  screens.forEach(s => {
+    s.classList.remove('active', 'previous', 'entering');
+  });
+
+  if (direction === 'forward') {
+    target.classList.add('entering');
+    target.offsetHeight; // force reflow
+    if (current) current.classList.add('previous');
+    target.classList.remove('entering');
+    target.classList.add('active');
+  } else {
+    target.style.transform = 'translateX(-30%)';
+    target.offsetHeight;
+    target.style.transform = '';
+    target.classList.add('active');
+    if (current) {
+      current.style.transform = 'translateX(100%)';
+    }
+  }
+
+  // Reset scroll
+  target.scrollTop = 0;
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+
+  if (tab === 'home') {
+    if (currentBlock !== null && currentDay !== null) {
+      showScreen('screen-day', 'forward');
+    } else if (currentBlock !== null) {
+      showScreen('screen-block', 'forward');
+    } else {
+      showScreen('screen-home', 'backward');
+    }
+  } else if (tab === 'history') {
+    renderHistory();
+    showScreen('screen-history', 'forward');
+  } else if (tab === 'export') {
+    showScreen('screen-export', 'forward');
+  }
+}
+
+function goHome() {
+  currentBlock = null;
+  currentDay = null;
+  showScreen('screen-home', 'backward');
+}
+function goBlock() {
+  currentDay = null;
+  showScreen('screen-block', 'backward');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER: HOME (BLOCK LIST)
+// ═══════════════════════════════════════════════════════════════
+function renderHome() {
+  const list = document.getElementById('block-list');
+  list.innerHTML = BLOCKS.map(block => {
+    const done = blockProgress(block.num);
+    const flag = block.flag;
+    let pillClass = '', pillText = '';
+    if (flag === 'DELOAD') { pillClass = 'pill-deload'; pillText = 'Deload'; }
+    else if (flag === 'BENCHMARK') { pillClass = 'pill-bench'; pillText = 'Test'; }
+    else if (flag === 'TOPP' || flag === 'FASE-TOPP') { pillClass = 'pill-peak'; pillText = 'Topp'; }
+    else if (done === 5) { pillClass = 'pill-done'; pillText = '✓ 5/5'; }
+    else if (done > 0) { pillClass = 'pill-done'; pillText = `${done}/5`; }
+
+    let numClass = '';
+    if (flag === 'DELOAD') numClass = 'deload';
+    else if (flag === 'BENCHMARK') numClass = 'benchmark';
+    else if (flag.includes('TOPP')) numClass = 'peak';
+    if (done === 5) numClass = 'completed';
+
+    return `
+      <div class="card" onclick="openBlock(${block.num})">
+        <div class="card-num ${numClass}">${block.num}</div>
+        <div class="card-body">
+          <div class="card-title">${block.name}</div>
+          <div class="card-subtitle">
+            <span>${block.dates}</span>
+            ${pillText ? `<span class="card-pill ${pillClass}">${pillText}</span>` : ''}
+          </div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER: BLOCK DETAIL
+// ═══════════════════════════════════════════════════════════════
+function openBlock(num) {
+  currentBlock = num;
+  const block = BLOCKS.find(b => b.num === num);
+  document.getElementById('block-title').textContent = block.name;
+  document.getElementById('block-subtitle').textContent = `${block.phase} · ${block.dates}`;
+
+  const dayLabels = ['Underkropp', 'Push', 'Kondis', 'Pull', 'Full styrke'];
+
+  let html = `
+    <div class="info-box ${block.flag === 'DELOAD' ? 'green' : block.flag === 'BENCHMARK' ? 'purple' : 'blue'}">
+      <strong>${block.flag === 'DELOAD' ? 'Deload-blokk' : block.flag === 'BENCHMARK' ? 'Benchmark-uke' : 'Tema'}</strong>
+      ${block.theme}
+    </div>
+
+    <div class="info-box">
+      <strong>Fokus</strong>
+      ${block.focus}
+    </div>
+
+    <div class="section-title">Velg dag</div>
+    <div class="days-grid">
+      ${block.days.map((day, i) => {
+        const done = isDayCompleted(num, i);
+        return `
+          <div class="day-cell ${done ? 'completed' : ''}" onclick="openDay(${num}, ${i})">
+            <div class="day-num">${i + 1}</div>
+            <div class="day-label">${dayLabels[i]}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div class="section-title">Delmål</div>
+    <div style="padding: 0 16px;">
+      ${block.goals.map(g => `
+        <div style="display: flex; gap: 10px; padding: 8px 0; font-size: 13px; color: var(--text-soft); line-height: 1.5; border-bottom: 1px solid var(--border);">
+          <span style="color: var(--amber);">·</span>
+          <span>${g}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="info-box" style="margin-top: 20px;">
+      <strong>Hva du kan forvente</strong>
+      ${block.expect}
+    </div>
+
+    <div style="height: 24px;"></div>
+  `;
+
+  document.getElementById('block-content').innerHTML = html;
+  showScreen('screen-block', 'forward');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER: DAY DETAIL (LOG)
+// ═══════════════════════════════════════════════════════════════
+function openDay(blockNum, dayIdx) {
+  currentBlock = blockNum;
+  currentDay = dayIdx;
+  const block = BLOCKS.find(b => b.num === blockNum);
+  const day = block.days[dayIdx];
+
+  document.getElementById('day-title').textContent = `Dag ${dayIdx + 1} · ${day.focus}`;
+  document.getElementById('day-subtitle').textContent = `Blokk ${blockNum} · ${block.name}`;
+
+  const completed = isDayCompleted(blockNum, dayIdx);
+
+  let html = `
+    <div class="day-hero">
+      <div class="day-hero-eyebrow">Blokk ${blockNum}, dag ${dayIdx + 1}</div>
+      <h2 class="day-hero-title">${day.focus}</h2>
+      <div class="day-hero-meta">
+        <span class="cns-badge cns-${day.cns}">${day.cns} CNS</span>
+        <span>${day.exercises.length} øvelser</span>
+      </div>
+    </div>
+
+    ${day.warmup && day.warmup !== '—' ? `
+      <div class="warmup-card">
+        <div class="warmup-label">Oppvarming</div>
+        <div class="warmup-text">${day.warmup}</div>
+      </div>
+    ` : ''}
+  `;
+
+  // Exercises
+  day.exercises.forEach((ex, exIdx) => {
+    const numSets = ex.log_sets || 0;
+    const isTime = ex.is_time;
+    const isDistance = ex.is_distance;
+    const isCardio = ex.is_cardio;
+    const isInfoOnly = numSets === 0;
+
+    let setsHtml = '';
+    if (!isInfoOnly && numSets > 0) {
+      setsHtml = `
+        <div class="set-headers">
+          <div class="set-header-label">#</div>
+          <div class="set-header-label">${isTime ? 'Sek' : (isDistance ? 'cm' : (isCardio ? 'Watt' : 'Vekt'))}</div>
+          <div class="set-header-label">${isCardio ? 'Min' : 'Reps'}</div>
+          <div class="set-header-label">RPE</div>
+        </div>
+        <div class="sets-list">
+          ${Array.from({length: numSets}, (_, i) => {
+            const valA = getSetValue(blockNum, dayIdx, exIdx, i, 'a');
+            const valB = getSetValue(blockNum, dayIdx, exIdx, i, 'b');
+            const rpe = getSetValue(blockNum, dayIdx, exIdx, i, 'rpe');
+            const logged = valA || valB || rpe;
+            return `
+              <div class="set-row ${logged ? 'logged' : ''}" data-set="${i}">
+                <div class="set-num">${i + 1}</div>
+                <input type="number" inputmode="decimal" class="set-input"
+                  placeholder="—"
+                  value="${valA}"
+                  onchange="setSetValue(${blockNum}, ${dayIdx}, ${exIdx}, ${i}, 'a', this.value); refreshSetRow(this);">
+                <input type="number" inputmode="decimal" class="set-input"
+                  placeholder="—"
+                  value="${valB}"
+                  onchange="setSetValue(${blockNum}, ${dayIdx}, ${exIdx}, ${i}, 'b', this.value); refreshSetRow(this);">
+                <select class="rpe-select"
+                  onchange="setSetValue(${blockNum}, ${dayIdx}, ${exIdx}, ${i}, 'rpe', this.value); refreshSetRow(this);">
+                  <option value="">—</option>
+                  ${[5,6,7,8,9,10].map(r => `<option value="${r}" ${rpe == r ? 'selected' : ''}>${r}</option>`).join('')}
+                </select>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="exercise" id="ex-${exIdx}">
+        <div class="exercise-header" onclick="toggleExercise(${exIdx})">
+          <div class="exercise-icon">${exIdx + 1}</div>
+          <div class="exercise-info">
+            <div class="exercise-name">${ex.name}</div>
+            <div class="exercise-meta">
+              <span class="meta-pill"><strong>${ex.sets}</strong></span>
+              <span class="meta-pill">${ex.load}</span>
+              ${ex.tempo !== '—' ? `<span class="meta-pill">⏱ ${ex.tempo}</span>` : ''}
+              <span class="meta-pill">↻ ${ex.rest}</span>
+              <span class="meta-pill">${ex.rpe}</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▾</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-note">${ex.note}</div>
+          ${setsHtml}
+        </div>
+      </div>
+    `;
+  });
+
+  // Finisher
+  if (day.finisher) {
+    html += `
+      <div class="finisher">
+        <div class="finisher-label">Finisher</div>
+        <div class="finisher-name">${day.finisher.name}</div>
+        <div class="finisher-detail">${day.finisher.detail}</div>
+        ${day.finisher.zone ? `<div class="zone-tag">${day.finisher.zone}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // Notes + complete button
+  const notes = getDayNotes(blockNum, dayIdx);
+  html += `
+    <div class="complete-row">
+      <div class="section-title" style="margin: 0 0 8px;">Notater</div>
+      <textarea class="notes-textarea" placeholder="Hvordan kjentes økten? Garmin-puls? Noter alt som er verdt å huske..."
+        onchange="setDayNotes(${blockNum}, ${dayIdx}, this.value)">${notes}</textarea>
+      <button class="button ${completed ? 'secondary' : ''}" onclick="toggleComplete(${blockNum}, ${dayIdx}); return false;">
+        ${completed ? '✓ Markert som fullført — trykk for å angre' : 'Marker økt som fullført'}
+      </button>
+    </div>
+  `;
+
+  document.getElementById('day-content').innerHTML = html;
+  showScreen('screen-day', 'forward');
+
+  // Auto-open first exercise
+  setTimeout(() => {
+    const firstEx = document.getElementById('ex-0');
+    if (firstEx && day.exercises[0]?.log_sets > 0) firstEx.classList.add('open');
+  }, 100);
+}
+
+function toggleExercise(idx) {
+  const el = document.getElementById('ex-' + idx);
+  el.classList.toggle('open');
+}
+
+function refreshSetRow(input) {
+  const row = input.closest('.set-row');
+  const inputs = row.querySelectorAll('input, select');
+  const hasValue = Array.from(inputs).some(i => i.value);
+  row.classList.toggle('logged', hasValue);
+}
+
+function toggleComplete(blockNum, dayIdx) {
+  const newState = !isDayCompleted(blockNum, dayIdx);
+  setDayCompleted(blockNum, dayIdx, newState);
+  openDay(blockNum, dayIdx); // re-render
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER: HISTORY
+// ═══════════════════════════════════════════════════════════════
+function renderHistory() {
+  const log = getLog();
+  let totalSessions = 0, totalSets = 0, totalCompleted = 0;
+
+  Object.values(log).forEach(entry => {
+    if (entry.completed) totalCompleted++;
+    Object.values(entry.exercises || {}).forEach(ex => {
+      Object.values(ex.sets || {}).forEach(set => {
+        if (set.a || set.b || set.rpe) totalSets++;
+      });
+    });
+  });
+
+  // Track progression of key lifts across blocks
+  const keyLifts = ['Legpress', 'Trap-bar markløft', 'Flat benkpress med stang', 'Incline DB press', 'Assistert pull-up'];
+  let liftHistories = {};
+
+  BLOCKS.forEach(block => {
+    block.days.forEach((day, dayIdx) => {
+      day.exercises.forEach((ex, exIdx) => {
+        const key = `b${block.num}d${dayIdx}`;
+        const exLog = log[key]?.exercises?.[exIdx];
+        if (!exLog) return;
+
+        keyLifts.forEach(name => {
+          if (ex.name === name) {
+            liftHistories[name] = liftHistories[name] || [];
+            // Find max weight logged
+            let maxWeight = 0;
+            Object.values(exLog.sets || {}).forEach(set => {
+              const w = parseFloat(set.a) || 0;
+              if (w > maxWeight) maxWeight = w;
+            });
+            if (maxWeight > 0) {
+              liftHistories[name].push({ block: block.num, weight: maxWeight });
+            }
+          }
+        });
+      });
+    });
+  });
+
+  let html = `
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-val">${totalCompleted}</div>
+        <div class="stat-label">Økter fullført</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${totalSets}</div>
+        <div class="stat-label">Sett logget</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${Math.round((totalCompleted / 60) * 100)}%</div>
+        <div class="stat-label">Fase 1</div>
+      </div>
+    </div>
+
+    <div class="section-title">Progresjon — nøkkeløvelser</div>
+  `;
+
+  Object.entries(liftHistories).forEach(([name, history]) => {
+    if (history.length === 0) return;
+    const max = Math.max(...history.map(h => h.weight));
+    html += `
+      <div class="history-item">
+        <div class="history-header">
+          <div class="history-name">${name}</div>
+          <div class="history-blocks">${history.length} blokker</div>
+        </div>
+        ${history.map(h => `
+          <div class="history-bar-row">
+            <div class="history-block-num">B${h.block}</div>
+            <div class="history-bar"><div class="history-bar-fill" style="width: ${(h.weight / max) * 100}%"></div></div>
+            <div class="history-val">${h.weight} kg</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+
+  if (Object.values(liftHistories).every(h => h.length === 0)) {
+    html += `
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">Ingen historikk ennå</div>
+        <div class="empty-text">Logg din første økt så ser du progresjonsdata her.</div>
+      </div>
+    `;
+  }
+
+  document.getElementById('history-content').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════════
+function generateExport(scope) {
+  const log = getLog();
+  let lastBlock = null, lastDay = null, lastTime = null;
+
+  // Find most recent completed session
+  Object.entries(log).forEach(([key, entry]) => {
+    if (entry.completed && entry.completedAt) {
+      const t = new Date(entry.completedAt);
+      if (!lastTime || t > lastTime) {
+        lastTime = t;
+        const m = key.match(/b(\d+)d(\d+)/);
+        if (m) { lastBlock = parseInt(m[1]); lastDay = parseInt(m[2]); }
+      }
+    }
+  });
+
+  if (lastBlock === null) {
+    document.getElementById('export-text').value = 'Ingen økter logget ennå.';
+    return;
+  }
+
+  let text = '';
+  if (scope === 'last') {
+    text = formatDayReport(lastBlock, lastDay);
+  } else {
+    text = `RAPPORT — Blokk ${lastBlock}\n\n`;
+    for (let d = 0; d < 5; d++) {
+      if (log[`b${lastBlock}d${d}`]?.completed) {
+        text += formatDayReport(lastBlock, d) + '\n\n---\n\n';
+      }
+    }
+  }
+
+  document.getElementById('export-text').value = text;
+}
+
+function formatDayReport(blockNum, dayIdx) {
+  const log = getLog();
+  const block = BLOCKS.find(b => b.num === blockNum);
+  const day = block.days[dayIdx];
+  const entry = log[`b${blockNum}d${dayIdx}`];
+
+  if (!entry) return '';
+
+  let text = `BLOKK ${blockNum} · DAG ${dayIdx + 1} — ${day.focus}\n`;
+  text += `(${block.name})\n\n`;
+
+  day.exercises.forEach((ex, exIdx) => {
+    const exLog = entry.exercises?.[exIdx];
+    if (!exLog || Object.keys(exLog.sets || {}).length === 0) return;
+
+    text += `${ex.name} (${ex.sets}, ${ex.load})\n`;
+
+    Object.entries(exLog.sets).forEach(([setIdx, set]) => {
+      const parts = [];
+      if (set.a) parts.push(`${set.a}${ex.is_time ? 's' : (ex.is_distance ? 'cm' : (ex.is_cardio ? 'W' : 'kg'))}`);
+      if (set.b) parts.push(`${set.b}${ex.is_cardio ? 'min' : ' reps'}`);
+      if (set.rpe) parts.push(`RPE ${set.rpe}`);
+      text += `  Sett ${parseInt(setIdx) + 1}: ${parts.join(' × ')}\n`;
+    });
+    text += '\n';
+  });
+
+  if (entry.notes) {
+    text += `Notater: ${entry.notes}\n`;
+  }
+
+  return text;
+}
+
+function copyExport() {
+  const ta = document.getElementById('export-text');
+  if (!ta.value) return;
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  try {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(ta.value);
+    } else {
+      document.execCommand('copy');
+    }
+    showSaveToast('Kopiert til utklippstavle');
+  } catch (e) {
+    showSaveToast('Marker tekst og trykk kopier');
+  }
+}
+
+function downloadBackup() {
+  const data = localStorage.getItem(STORAGE_KEY) || '{}';
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const date = new Date().toISOString().split('T')[0];
+  a.download = `composite-athlete-backup-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showSaveToast('Backup lastet ned');
+}
+
+function restoreBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (confirm('Erstatt all eksisterende treningsdata? Last ned backup først hvis du er usikker.')) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        showSaveToast('Backup gjenopprettet');
+        renderHome();
+      }
+    } catch (err) {
+      alert('Kunne ikke lese filen.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+renderHome();
+// Pre-render export
+setTimeout(() => generateExport('last'), 100);
+
+// Prevent zoom on double-tap on iOS
+let lastTouch = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouch <= 300 && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
+    e.preventDefault();
+  }
+  lastTouch = now;
+}, { passive: false });
+
+</script>
+
+</body>
+</html>
